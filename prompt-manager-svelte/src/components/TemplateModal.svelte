@@ -1,9 +1,9 @@
 <script lang="ts">
-    import { createEventDispatcher, onMount } from 'svelte';
-    import { promptStore } from '../stores/promptStore';
-    import { historyStore } from '../stores/historyStore';
-    import { showToast } from '../stores/uiStore';
-    
+    import { createEventDispatcher, onMount } from "svelte";
+    import { promptStore } from "../stores/promptStore";
+    import { historyStore } from "../stores/historyStore";
+    import { showToast } from "../stores/uiStore";
+
     export let promptId: string;
     export let initialValues: Record<string, string> = {};
 
@@ -11,30 +11,39 @@
     let prompt: any = null;
     let placeholders: string[] = [];
     let values: Record<string, string> = {};
-    let preview = '';
+    let preview = "";
 
     $: if (promptId) {
-        prompt = $promptStore.prompts.find(p => p.id === promptId);
+        prompt = $promptStore.prompts.find((p) => p.id === promptId);
         if (prompt) {
             const content = prompt.content;
-            placeholders = [...new Set([...content.matchAll(/{{([^\n}]+?)}}/g)].map(m => m[1].trim()))];
-            
+            placeholders = [
+                ...new Set(
+                    [...content.matchAll(/{{([^\n}]+?)}}/g)].map((m) =>
+                        m[1].trim(),
+                    ),
+                ),
+            ];
+
             // Reconcile initialValues
             if (initialValues && Object.keys(initialValues).length > 0) {
-                 let mismatch = false;
-                 // Keep compatible values
-                 Object.keys(initialValues).forEach(k => {
-                     if (placeholders.includes(k)) {
-                         values[k] = initialValues[k];
-                     } else {
-                         mismatch = true;
-                     }
-                 });
-                 if (mismatch) {
-                     showToast('Warning: Some previous variables do not match current template.', 'warning');
-                 }
+                let mismatch = false;
+                // Keep compatible values
+                Object.keys(initialValues).forEach((k) => {
+                    if (placeholders.includes(k)) {
+                        values[k] = initialValues[k];
+                    } else {
+                        mismatch = true;
+                    }
+                });
+                if (mismatch) {
+                    showToast(
+                        "Warning: Some previous variables do not match current template.",
+                        "warning",
+                    );
+                }
             }
-            
+
             updatePreview();
         }
     }
@@ -42,7 +51,7 @@
     function updatePreview() {
         if (!prompt) return;
         let p = prompt.content;
-        placeholders.forEach(ph => {
+        placeholders.forEach((ph) => {
             p = p.replaceAll(`{{${ph}}}`, values[ph] || `{{${ph}}}`);
         });
         preview = p;
@@ -56,20 +65,22 @@
     async function handleGenerate() {
         if (!prompt) return;
         await navigator.clipboard.writeText(preview);
-        showToast('Generated and copied to clipboard!');
-        
+        showToast("Generated and copied to clipboard!");
+
         // Update usage count
-        await promptStore.updatePrompt(prompt.id, { usageCount: (prompt.usageCount || 0) + 1 });
+        await promptStore.updatePrompt(prompt.id, {
+            usageCount: (prompt.usageCount || 0) + 1,
+        });
 
         // Log Usage with variables
         historyStore.logUsage({
-            type: 'template_generate',
+            type: "template_generate",
             itemId: prompt.id,
             itemName: prompt.title,
             content: preview, // The result
-            variablesUsed: { ...values } // The inputs
+            variablesUsed: { ...values }, // The inputs
         });
-        
+
         // User requested to NOT close modal on generate
         // dispatch('close');
     }
@@ -90,18 +101,25 @@
             const text = await file.text();
             values[currentUploadTarget] = text;
             updatePreview();
-            showToast('File loaded into ' + currentUploadTarget);
+            showToast("File loaded into " + currentUploadTarget);
         }
-        fileInput.value = '';
+        fileInput.value = "";
         currentUploadTarget = null;
     }
 </script>
 
-<div class="modal-overlay show" on:click={(e) => { if(e.target === e.currentTarget) dispatch('close'); }}>
+<div
+    class="modal-overlay show"
+    on:click={(e) => {
+        if (e.target === e.currentTarget) dispatch("close");
+    }}
+>
     <div class="modal">
         <div class="modal-header">
-            <h3 class="modal-title">{prompt ? prompt.title : 'Template'}</h3>
-            <span class="close-modal-btn" on:click={() => dispatch('close')}>&times;</span>
+            <h3 class="modal-title">{prompt ? prompt.title : "Template"}</h3>
+            <span class="close-modal-btn" on:click={() => dispatch("close")}
+                >&times;</span
+            >
         </div>
 
         <div class="modal-body">
@@ -110,41 +128,85 @@
                     <div class="form-group">
                         <label>{ph}</label>
                         <div style="display: flex; gap: 8px;">
-                            <textarea 
-                                rows="2" 
+                            <textarea
+                                rows="2"
                                 on:input={(e) => handleInput(ph, e)}
-                                value={values[ph] || ''}
+                                value={values[ph] || ""}
                                 style="height: auto;"
                             ></textarea>
-                            <button class="button-like" on:click={() => triggerUpload(ph)} title="Upload File" style="padding: 0 10px;">
+                            <button
+                                class="button-like"
+                                on:click={() => triggerUpload(ph)}
+                                title="Upload File"
+                                style="padding: 0 10px;"
+                            >
                                 <i class="fa-solid fa-file-arrow-up"></i>
                             </button>
                         </div>
                     </div>
                 {/each}
             {:else}
-                <p style="color: var(--text-secondary); margin-bottom: 20px;">No variables found in this template.</p>
+                <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                    No variables found in this template.
+                </p>
             {/if}
 
             <div class="form-group" style="margin-top: 20px;">
                 <label>Preview</label>
-                <div style="padding: 12px; background-color: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 8px; font-family: monospace; font-size: 0.9rem; white-space: pre-wrap; height: 150px; overflow-y: auto;">
+                <div
+                    style="padding: 12px; background-color: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 8px; font-family: monospace; font-size: 0.9rem; white-space: pre-wrap; height: 150px; overflow-y: auto;"
+                >
                     {preview}
                 </div>
             </div>
         </div>
 
         <div class="modal-footer">
-            <button class="button-like" on:click={() => dispatch('close')}>Cancel</button>
-            <button class="button-like" style="background-color: var(--accent-blue); color: var(--bg-primary); border: none;" on:click={handleGenerate}>
+            <button class="button-like" on:click={() => dispatch("close")}
+                >Cancel</button
+            >
+            <button
+                class="button-like"
+                style="background-color: var(--accent-blue); color: var(--bg-primary); border: none;"
+                on:click={handleGenerate}
+            >
                 <i class="fa-solid fa-wand-magic-sparkles"></i> Generate & Copy
             </button>
         </div>
     </div>
-    
-    <input type="file" bind:this={fileInput} on:change={handleFile} class="hidden" />
+
+    <input
+        type="file"
+        bind:this={fileInput}
+        on:change={handleFile}
+        class="hidden"
+    />
 </div>
 
 <style>
     /* Scoped styles if needed, but mostly relying on app.css */
+
+    /* Mobile responsive styles */
+    @media (max-width: 480px) {
+        .modal {
+            width: 95vw;
+            max-width: 95vw;
+            max-height: 90vh;
+        }
+
+        .modal-body {
+            padding: 12px;
+        }
+
+        .modal-footer {
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .modal-footer .button-like {
+            flex: 1 1 auto;
+            min-width: 100px;
+            justify-content: center;
+        }
+    }
 </style>

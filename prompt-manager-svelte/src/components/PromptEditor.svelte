@@ -322,6 +322,7 @@
                     class="button-like"
                     on:click={() => (showHistory = !showHistory)}
                     style="color: var(--text-secondary);"
+                    title="버전 기록"
                 >
                     <i class="fa-solid fa-clock-rotate-left"></i> 기록
                 </button>
@@ -331,6 +332,7 @@
                 on:click={handleAnalyze}
                 disabled={isAnalyzing}
                 style="color: var(--accent-blue); border-color: var(--accent-blue);"
+                title="AI 자동 완성"
             >
                 {#if isAnalyzing}
                     <i class="fa-solid fa-spinner fa-spin"></i> 분석 중...
@@ -339,6 +341,7 @@
                 {/if}
             </button>
             <div
+                class="action-divider"
                 style="width: 1px; background: var(--border-color); margin: 0 4px;"
             ></div>
             {#if promptId}
@@ -346,17 +349,21 @@
                     class="button-like"
                     on:click={handleDelete}
                     style="color: var(--accent-pink); border-color: var(--accent-pink);"
+                    title="삭제"
                 >
                     <i class="fa-regular fa-trash-can"></i> 삭제
                 </button>
             {/if}
-            <button class="button-like" on:click={() => dispatch("close")}
-                >취소</button
+            <button
+                class="button-like"
+                on:click={() => dispatch("close")}
+                title="취소"><i class="fa-solid fa-xmark"></i> 취소</button
             >
             <button
                 class="button-like"
                 on:click={handleSave}
                 style="background-color: var(--text-primary); color: var(--bg-primary); border: none;"
+                title="저장"
             >
                 <i class="fa-regular fa-save"></i> 저장
             </button>
@@ -619,5 +626,41 @@
     .restore-btn:hover {
         background: var(--bg-hover);
         border-color: var(--accent-blue);
+    }
+
+    /* Mobile responsive styles */
+    @media (max-width: 1024px) {
+        .editor-header {
+            flex-wrap: wrap !important;
+            gap: 12px;
+        }
+
+        .editor-header h2 {
+            font-size: 1.2rem !important;
+            flex: 1 1 100%;
+        }
+
+        .editor-actions {
+            flex-wrap: nowrap !important;
+            gap: 6px !important;
+            width: 100%;
+            justify-content: flex-start;
+        }
+
+        .editor-actions .action-divider {
+            display: none;
+        }
+
+        .editor-actions .button-like {
+            padding: 10px;
+            min-width: 40px;
+            font-size: 0; /* Hide text */
+            flex-shrink: 0;
+        }
+
+        .editor-actions .button-like i {
+            font-size: 1rem; /* Restore icon size */
+            margin: 0;
+        }
     }
 </style>
